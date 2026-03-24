@@ -6,7 +6,6 @@ import sys
 import time
 
 from pathlib import Path
-from PyFoam.RunDictionary.ParsedParameterFile import ParsedParameterFile
 
 from smartsim import Experiment
 from smartsim.status import TERMINAL_STATUSES
@@ -16,17 +15,6 @@ platform_configs = {
     "local": {
         "launcher": "local",
         "interface": "lo",
-        "run_command": "mpirun"
-    },
-    "hotlum": {
-        "launcher": "slurm",
-        "interface": "bond0",
-        "run_command": "srun"
-    },
-    "vader": {
-        "launcher": "slurm",
-        "interface": "bond0",
-        "run_command": "srun"
     },
 }
 
@@ -50,21 +38,8 @@ def main(args):
     # Launch the database
     # ----------------------------------------------------------------
 
-    db = exp.create_database(port=8000, interface=platform_config["interface"])
+    db = exp.create_database(port=args.port, interface=platform_config["interface"])
     exp.generate(db, overwrite=True)
-
-    # ----------------------------------------------------------------
-    # Get the number of MPI ranks from system/decomposeParDict
-    # ----------------------------------------------------------------
-
-    # build the full path to the decomposeParDict
-    decompose_dict_path = input_case_path / 'system' / 'decomposeParDict'
-
-    # load the dictionary
-    decompose = ParsedParameterFile(decompose_dict_path)
-
-    # extract the numberOfSubdomains entry
-    num_mpi_ranks = decompose['numberOfSubdomains']
 
     # ----------------------------------------------------------------
     # Configure and create the OpenFOAM mesh-motion model
@@ -73,13 +48,8 @@ def main(args):
     # Create OpenFOAM moveDynamicMesh run settings
     openfoam_rs = exp.create_run_settings(
         exe="moveDynamicMesh",
-        exe_args="-parallel",
         run_command=platform_config["run_command"]
     )
-    openfoam_rs.set_tasks(num_mpi_ranks)
-    openfoam_rs.set_cpus_per_task(1)
-    if platform_config["launcher"] == "slurm":
-        openfoam_rs.set("overlap")
 
     # Create the model from the OpenFOAM case argument
     openfoam_model = exp.create_model(
@@ -94,12 +64,8 @@ def main(args):
 
     training_rs = exp.create_run_settings(
         exe="python",
-        exe_args=f"ml_model_training.py {num_mpi_ranks} {args.pinn_type}"
+        exe_args=f"ml_model_training.py 1 {args.pinn_type}"
     )
-    training_rs.set_tasks(1)
-    training_rs.set_cpus_per_task(32)
-    if platform_config["launcher"] == "slurm":
-        openfoam_rs.set("overlap")
 
     ml_model_training = exp.create_model(
         name="ml_model_training",
@@ -139,6 +105,11 @@ if __name__ == "__main__":
         description="Run a SmartSim Machine-Learning mesh deformation experiment"
     )
     parser.add_argument(
+        "--port", "-e",
+        required=True,
+        help="Port used by the db to communicate over, e.g. 8000-9000"
+    )
+    parser.add_argument(
         "--experiment", "-e",
         default="meshMotion",
         help="Name of the SmartSim experiment (e.g., mesh_deformation)"
@@ -151,7 +122,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--case", "-c",
-        required=True,
+        default="ellipsoid3d_MachineLearningMeshMotionBase",
         help="Name of the OpenFOAM case folder (e.g., ellipsoid3D)"
     )
     parser.add_argument(
@@ -161,7 +132,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--pinn-type",
-        default=None,
+        default="Laplace3d",
         help="The type of PINN to use"
     )
     args = parser.parse_args()

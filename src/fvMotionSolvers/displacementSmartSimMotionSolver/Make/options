@@ -6,7 +6,7 @@ EXE_INC = -std=c++17 -Wno-old-style-cast -Wno-non-virtual-dtor \
     -I$(LIB_SRC)/dynamicMesh/lnInclude \
     -I$(LIB_SRC)/functionObjects/forces/lnInclude \
     -I$(LIB_SRC)/fvMotionSolver/lnInclude \
-    -I../../../smartredis/install/include
+    -I$(SMARTREDIS_INSTALL_PATH)/include
 
 LIB_LIBS = \
     -lfiniteVolume \
