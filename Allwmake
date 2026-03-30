@@ -20,7 +20,6 @@ elif [ $WM_COMPILER == "Icx" ]; then
     export CC=icx-cc
     export CXX=icpx
 fi
-make lib
 cd "$_REPO_ROOT" || exit 1
 
 LIB=lib

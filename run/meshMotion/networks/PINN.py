@@ -279,7 +279,7 @@ class PINNTrainer(ABC):
     def step(self, iteration):
         self.optimizer.zero_grad()
         train_losses, validation_losses = self._calc_all_losses()
-        agg_training_loss = self.agg_training.forward(train_losses, iteration)
+        agg_training_loss = self.agg_training.forward(train_losses, torch.tensor([iteration]).to(self.device))
         agg_training_loss.backward()
         self.optimizer.step()
 

@@ -15,6 +15,7 @@ platform_configs = {
     "local": {
         "launcher": "local",
         "interface": "lo",
+        "run_command": "None",
     },
 }
 
@@ -48,7 +49,6 @@ def main(args):
     # Create OpenFOAM moveDynamicMesh run settings
     openfoam_rs = exp.create_run_settings(
         exe="moveDynamicMesh",
-        run_command=platform_config["run_command"]
     )
 
     # Create the model from the OpenFOAM case argument
@@ -105,7 +105,7 @@ if __name__ == "__main__":
         description="Run a SmartSim Machine-Learning mesh deformation experiment"
     )
     parser.add_argument(
-        "--port", "-e",
+        "--port", "-p",
         required=True,
         help="Port used by the db to communicate over, e.g. 8000-9000"
     )
@@ -122,7 +122,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--case", "-c",
-        default="ellipsoid3d_MachineLearningMeshMotionBase",
+        default="ellipsoid3D_MachineLearningMeshMotionBase",
         help="Name of the OpenFOAM case folder (e.g., ellipsoid3D)"
     )
     parser.add_argument(

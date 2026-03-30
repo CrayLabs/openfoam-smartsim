@@ -24,7 +24,7 @@ default_device = (
 
 
 class MultiCriteriaEarlyStopping:
-    def __init__(self, patience=40, relative_tolerance=0.01):
+    def __init__(self, patience=40, relative_tolerance=0.005):
         """
         Tracks multiple criteria for early stopping based on relative improvement.
 
